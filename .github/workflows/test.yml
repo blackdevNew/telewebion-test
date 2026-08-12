@@ -1,0 +1,79 @@
+name: Test Telewebion
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test gateway
+        run: |
+          echo "Testing Telewebion gateway..."
+
+          curl -v \
+            --connect-timeout 20 \
+            --max-time 30 \
+            "https://gateway.telewebion.ir/" \
+            -o response.txt \
+            || true
+
+          echo ""
+          echo "========== RESPONSE =========="
+          head -c 2000 response.txt || true
+
+      - name: Test API
+        run: |
+          python - <<'PY'
+          import requests
+
+          url = "https://gateway.telewebion.ir/kandoo/program/getEpisodesByProgramDate/"
+
+          params = {
+              "ProgramID": "0x13a521a4",
+              "First": 24,
+              "Offset": 0,
+              "FromDate": "2026-08-05T00:00:00",
+              "ToDate": "2026-08-05T23:59:59",
+          }
+
+          headers = {
+              "User-Agent": (
+                  "Mozilla/5.0 (X11; Linux x86_64) "
+                  "AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) "
+                  "Chrome/139.0 Safari/537.36"
+              ),
+              "Accept": "application/json, text/plain, */*",
+              "Referer": "https://telewebion.com/",
+          }
+
+          try:
+              r = requests.get(
+                  url,
+                  params=params,
+                  headers=headers,
+                  timeout=30
+              )
+
+              print("STATUS:", r.status_code)
+              print("URL:", r.url)
+              print("CONTENT-TYPE:", r.headers.get("content-type"))
+              print()
+              print(r.text[:3000])
+
+          except Exception as e:
+              print("ERROR:", repr(e))
+              raise
+          PY
+
+      - name: Test download server
+        run: |
+          echo "Testing dl.telewebion.ir..."
+
+          curl -I \
+            --connect-timeout 20 \
+            --max-time 30 \
+            "https://dl.telewebion.ir/" \
+            || true
