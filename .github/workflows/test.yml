@@ -4,6 +4,17 @@ on:
   repository_dispatch:
     types: [download-request]
 
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: "Target date (YYYY-MM-DD)"
+        required: false
+        default: "2026-08-05"
+      program_id:
+        description: "Program ID"
+        required: false
+        default: "0x13a521a4"
+
 jobs:
   run:
     runs-on: ubuntu-latest
