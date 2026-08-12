@@ -5,7 +5,7 @@ import requests
 import subprocess
 from pathlib import Path
 
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 from pydub import AudioSegment
 
 
