@@ -41,12 +41,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests==2.* pydub==0.* "moviepy==2.*"
-          python -c "import moviepy; print('moviepy:', moviepy.__version__)"
-          python -c "from moviepy.editor import VideoFileClip; print('VideoFileClip OK')"
-
-      - name: Check moviepy imports
-        run: |
+          pip install "requests==2.*" "pydub==0.*" "moviepy==2.*"
           python -c "import moviepy; print('moviepy:', moviepy.__version__)"
           python -c "from moviepy import VideoFileClip; print('VideoFileClip import OK')"
 
@@ -54,8 +49,9 @@ jobs:
       - name: Run pipeline
         run: |
           python -V
-          python -c "import moviepy; from moviepy.editor import VideoFileClip; print('Imports OK')"
+          python -c "from moviepy import VideoFileClip; print('Imports OK')"
           python scripts/pipeline.py
+
 
 
       - name: Upload chunks as artifact
