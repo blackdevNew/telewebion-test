@@ -47,7 +47,9 @@ jobs:
 
       - name: Check moviepy imports
         run: |
+          python -c "import moviepy; print('moviepy:', moviepy.__version__)"
           python -c "from moviepy import VideoFileClip; print('VideoFileClip import OK')"
+
 
       - name: Run pipeline
         run: |
