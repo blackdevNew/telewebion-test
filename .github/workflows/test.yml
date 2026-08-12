@@ -48,7 +48,10 @@ jobs:
 
       - name: Run pipeline
         run: |
+          python -V
+          python -c "import moviepy; from moviepy.editor import VideoFileClip; print('Imports OK')"
           python scripts/pipeline.py
+
 
       - name: Upload chunks as artifact
         if: always()
