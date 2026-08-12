@@ -1,79 +1,46 @@
-name: Test Telewebion
+name: Download and split audio
 
 on:
-  workflow_dispatch:
+  repository_dispatch:
+    types: [download-request]
 
 jobs:
-  test:
+  run:
     runs-on: ubuntu-latest
+    env:
+      PROGRAM_ID: "0x13a521a4"
+      TARGET_DATE: "2026-08-05"
+      # اگر خواستی می‌توانی این را هم عوض کنی
+      DL_BASE_PREFIX: "https://dl.telewebion.ir/4eb161fd-c23e-4641-95d5-95dee456df55"
 
     steps:
-      - name: Test gateway
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ffmpeg
         run: |
-          echo "Testing Telewebion gateway..."
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
 
-          curl -v \
-            --connect-timeout 20 \
-            --max-time 30 \
-            "https://gateway.telewebion.ir/" \
-            -o response.txt \
-            || true
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-          echo ""
-          echo "========== RESPONSE =========="
-          head -c 2000 response.txt || true
-
-      - name: Test API
+      - name: Install Python dependencies
         run: |
-          python - <<'PY'
-          import requests
+          python -m pip install --upgrade pip
+          pip install requests moviepy pydub
 
-          url = "https://gateway.telewebion.ir/kandoo/program/getEpisodesByProgramDate/"
-
-          params = {
-              "ProgramID": "0x13a521a4",
-              "First": 24,
-              "Offset": 0,
-              "FromDate": "2026-08-05T00:00:00",
-              "ToDate": "2026-08-05T23:59:59",
-          }
-
-          headers = {
-              "User-Agent": (
-                  "Mozilla/5.0 (X11; Linux x86_64) "
-                  "AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) "
-                  "Chrome/139.0 Safari/537.36"
-              ),
-              "Accept": "application/json, text/plain, */*",
-              "Referer": "https://telewebion.com/",
-          }
-
-          try:
-              r = requests.get(
-                  url,
-                  params=params,
-                  headers=headers,
-                  timeout=30
-              )
-
-              print("STATUS:", r.status_code)
-              print("URL:", r.url)
-              print("CONTENT-TYPE:", r.headers.get("content-type"))
-              print()
-              print(r.text[:3000])
-
-          except Exception as e:
-              print("ERROR:", repr(e))
-              raise
-          PY
-
-      - name: Test download server
+      - name: Run pipeline
         run: |
-          echo "Testing dl.telewebion.ir..."
+          python scripts/pipeline.py
 
-          curl -I \
-            --connect-timeout 20 \
-            --max-time 30 \
-            "https://dl.telewebion.ir/" \
-            || true
+      - name: Upload chunks as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-chunks
+          path: |
+            work/chunks/chunk_*.mp3
+          if-no-files-found: warn
