@@ -22,15 +22,6 @@ DL_BASE_PREFIX = os.getenv(
 FIRST = int(os.getenv("FIRST", "24"))
 OFFSET = int(os.getenv("OFFSET", "0"))
 
-# نصب نبود ffmpeg در Actions رایج است؛ moviepy/pydub برای تبدیل شدیداً نیازش دارند.
-# در workflow ما ffmpeg را نصب می‌کنیم، ولی اینجا یک guard ساده هم داریم.
-def ensure_ffmpeg():
-    try:
-        subprocess.run(["ffmpeg", "-version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        raise RuntimeError("ffmpeg is not available. Install ffmpeg in workflow.")
-
-
 def download_file(url: str, filename: Path):
     print(f"Downloading {filename} ...")
     resp = requests.get(url, stream=True, timeout=60)
@@ -55,6 +46,7 @@ def get_episodes_by_date():
     resp = requests.get(api_url, timeout=60)
     resp.raise_for_status()
     data = resp.json()
+    print("url called")
 
     episodes = data.get("body", {}).get("queryProgram", [{}])[0].get("episodes", [])
     return episodes
@@ -90,12 +82,12 @@ def split_mp3_to_chunks(input_mp3_path: Path, output_dir: Path, chunk_seconds: i
 
 
 def main():
-    ensure_ffmpeg()
 
     workdir = Path(os.getenv("WORKDIR", "work"))
     downloads_dir = workdir / "videos"
     output_dir = workdir / "chunks"
     workdir.mkdir(parents=True, exist_ok=True)
+    print("directories ended")
 
     episodes = get_episodes_by_date()
     if not episodes:
@@ -114,6 +106,7 @@ def main():
         filename = downloads_dir / f"{ep_id}_480p.mp4"
 
         try:
+            print("download file:")
             download_file(dl_url, filename)
             downloaded.append(filename)
         except Exception as e:
@@ -126,6 +119,7 @@ def main():
     # برای اینکه دقیقاً مشابه کدت باشد: از اولین فایل دانلود شده استخراج کن
     input_video = downloaded[0]
     output_audio = workdir / "extracted_audio.mp3"
+    print("extract audio")
 
     extract_audio_from_video(input_video, output_audio)
 
@@ -139,4 +133,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print("alllo...")
     main()
